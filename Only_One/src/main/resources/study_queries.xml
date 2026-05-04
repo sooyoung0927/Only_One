@@ -1,0 +1,131 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<properties>
+    <query key="addFavList">
+        insert into favorites (member_id, course_id)
+        values (?, ?)
+    </query>
+    <query key="showFavList">
+        select m.name as member_name, c.title as course_title, c.course_id as course_id
+        from favorites f
+        join members m ON f.member_id = m.member_id
+        join courses c ON f.course_id = c.course_id
+        where f.member_id = ?
+    </query>
+    <query key="showcompletedCourseList">
+        select c.title
+        from courses c
+        join studying_courses s ON c.course_id = s.course_id
+        where s.status = '수강완료'
+        and s.member_id = ?
+        and c.course_id not in (
+        select course_id from course_reviews where member_id = ?
+        )
+    </query>
+    <query key="writeReview">
+        insert into course_reviews (member_id, course_id, contents, rating)
+        select ?, c.course_id, ?, ?
+        from courses c
+        where c.title like concat('%', ?, '%');
+    </query>
+    <query key="showMyStudyingList">
+        select c.title, m.name as teacher_name
+        from courses c
+        join studying_courses s on c.course_id = s.course_id
+        join members m on c.member_id = m.member_id
+        where s.member_id = ?
+        and s.status = case ?
+        when 2 then '수강 중'
+        when 3 then '수강완료'
+        END
+    </query>
+    <query key="AllLecturesCompleted">
+        select count(*)
+        from lectures l
+        where l.course_id = ?
+        and l.lecture_id not in (
+        select lh.lecture_id
+        from lecture_histories lh
+        where lh.member_id = ?
+        and lh.status = 'COMPLETED'
+        )
+    </query>
+    <query key="updateCourseStatus">
+        update studying_courses
+        SET status = '수강완료'
+        where member_id = ?
+        and course_id = ?
+    </query>
+    <query key="showMyReviewList">
+        select  c.title as title , r.contents as contents, r.rating as rating
+        from courses c
+        join course_reviews r on c.course_id = r.course_id
+        where r.member_id=?
+    </query>
+    <query key="ShowReviewInCourse">
+        select
+        c.title as title,
+        teacher.name as teacher_name,
+        r.contents as contents,
+        r.rating as rating,
+        concat(left(student.name, 1), ' ● ● ') as review_writer
+        from courses c
+        join course_reviews r  on c.course_id  = r.course_id
+        join members teacher   on c.member_id  = teacher.member_id AND teacher.role = 'TEACHER'
+        join members student   on r.member_id  = student.member_id AND student.role = 'STUDENT'
+        where c.title like concat('%', ?, '%');
+    </query>
+    <query key="ShowReviewForTeacher">
+        select
+        c.title as title,
+        r.contents as contents,
+        r.rating as rating,
+        concat(left(student.name, 1), ' ● ● ') as review_writer
+        from courses c
+        join course_reviews r ON c.course_id = r.course_id
+        join members student ON r.member_id = student.member_id AND student.role = 'STUDENT'
+        where c.course_id = ?
+    </query>
+    <query key="existsReview">
+        select count(*)
+        from course_reviews r
+        join courses c ON r.course_id = c.course_id
+        where r.member_id = ?
+        and c.title like concat('%', ?, '%')
+    </query>
+    <query key="checkCourseExists">
+        select count(*)
+        from courses
+        where title like concat('%', ?, '%')
+    </query>
+    <query key="insertLectureHistory">
+        insert INTO lecture_histories (member_id, lecture_id, status)
+        VALUES (?, ?, 'COMPLETED')
+    </query>
+    <query key="insertStudyingCourse">
+        insert into studying_courses (course_id, member_id, status)
+        VALUES (?, ?, '수강 중')
+    </query>
+    <query key="existsStudyingCourse">
+        select count(*) from studying_courses
+        where member_id = ? and course_id = ?
+    </query>
+    <query key="deleteFavList">
+        delete from favorites
+        where member_id = ? and course_id = ?
+    </query>
+    <query key="checkAlreadyFav">
+        select count(*) from favorites
+        where member_id = ? and course_id = ?
+    </query>
+
+    <query key="checkAlreadyStudying">
+        select count(*) from studying_courses
+        where member_id = ? and course_id = ?
+    </query>
+    <query key="searchCourseByTitle">
+        select c.course_id, c.title, c.member_id, m.name as teacher_name
+        from courses c
+        join members m on c.member_id = m.member_id
+        where lower(c.title) like lower(concat('%', ?, '%'))
+    </query>
+</properties>

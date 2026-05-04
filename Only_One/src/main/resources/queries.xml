@@ -1,0 +1,154 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<queries>
+
+    <!-- ======================== COURSE ======================== -->
+
+    <!-- 전체 강좌 조회 (학생용) -->
+    <query id="course.findAll">
+        SELECT course_id, title, member_id
+        FROM courses
+    </query>
+
+    <!-- 강사 본인 강좌 조회 -->
+    <query id="course.findByMemberId">
+        SELECT course_id, title, member_id
+        FROM courses
+        WHERE member_id = ?
+    </query>
+
+    <!-- 강좌 단건 조회 -->
+    <query id="course.findById">
+        SELECT course_id, title, member_id
+        FROM courses
+        WHERE course_id = ?
+    </query>
+
+    <!-- 강좌 검색 (제목 LIKE) -->
+    <query id="course.searchByTitle">
+        SELECT course_id, title, member_id
+        FROM courses
+        WHERE title LIKE ?
+    </query>
+
+    <!-- 강좌 등록 -->
+    <query id="course.insert">
+        INSERT INTO courses (title, member_id)
+        VALUES (?, ?)
+    </query>
+
+    <!-- 강좌 수정 -->
+    <query id="course.update">
+        UPDATE courses
+        SET title = ?
+        WHERE course_id = ?
+    </query>
+
+    <!-- 강좌 삭제 -->
+    <query id="course.delete">
+        DELETE FROM courses
+        WHERE course_id = ?
+    </query>
+
+    <!-- ======================== LECTURE ======================== -->
+
+    <!-- 강좌별 강의 목록 조회 -->
+    <query id="lecture.findByCourseId">
+        SELECT lecture_id, course_id, title
+        FROM lectures
+        WHERE course_id = ?
+    </query>
+
+    <!-- 강의 단건 조회 -->
+    <query id="lecture.findById">
+        SELECT lecture_id, course_id, title
+        FROM lectures
+        WHERE lecture_id = ?
+    </query>
+
+    <!-- 강의 등록 -->
+    <query id="lecture.insert">
+        INSERT INTO lectures (course_id, title)
+        VALUES (?, ?)
+    </query>
+
+    <!-- 강의 삭제 -->
+    <query id="lecture.delete">
+        DELETE FROM lectures
+        WHERE lecture_id = ?
+    </query>
+
+    <!-- ======================== COURSE + LECTURE JOIN ======================== -->
+
+    <!-- 강좌 + 강의 JOIN 조회 (강좌 선택 시 강의 목록 함께 보기) -->
+    <query id="course.findWithLectures">
+        SELECT
+        c.course_id,
+        c.title        AS course_title,
+        c.member_id,
+        l.lecture_id,
+        l.title        AS lecture_title
+        FROM courses c
+        LEFT JOIN lectures l ON c.course_id = l.course_id
+        WHERE c.course_id = ?
+    </query>
+
+    <!-- 강사 본인 강좌 + 강의 전체 JOIN 조회 -->
+    <query id="course.findAllWithLecturesByMemberId">
+        SELECT
+        c.course_id,
+        c.title        AS course_title,
+        c.member_id,
+        l.lecture_id,
+        l.title        AS lecture_title
+        FROM courses c
+        LEFT JOIN lectures l ON c.course_id = l.course_id
+        WHERE c.member_id = ?
+        ORDER BY c.course_id
+    </query>
+
+    <!-- 강좌 검색 + 평균 별점 (별점 높은 순) -->
+    <query id="course.searchByTitleWithRating">
+        SELECT
+        c.course_id,
+        c.title,
+        c.member_id,
+        ROUND(AVG(r.rating), 1) AS avg_rating,
+        COUNT(r.review_id)      AS review_count
+        FROM courses c
+        LEFT JOIN course_reviews r ON c.course_id = r.course_id
+        WHERE c.title LIKE ?
+        GROUP BY c.course_id, c.title, c.member_id
+        ORDER BY avg_rating DESC
+    </query>
+
+    <!-- ======================== STUDYING_COURSES (수강생 조회 - 강사용) ======================== -->
+
+    <!-- 강좌별 수강생 목록 조회 -->
+    <query id="course.findStudentsByCourseId">
+        SELECT
+        m.member_id,
+        m.name,
+        m.email,
+        sc.status
+        FROM studying_courses sc
+        JOIN members m ON sc.member_id = m.member_id
+        WHERE sc.course_id = ?
+    </query>
+
+    <!-- ======================== COURSE_REVIEWS (강좌평 조회 - 강사용) ======================== -->
+
+    <!-- 강좌별 강좌평 목록 조회 -->
+    <query id="course.findReviewsByCourseId">
+        SELECT
+        r.review_id,
+        r.course_id,
+        r.member_id,
+        m.name,
+        r.contents,
+        r.rating
+        FROM course_reviews r
+        JOIN members m ON r.member_id = m.member_id
+        WHERE r.course_id = ?
+    </query>
+
+</queries>

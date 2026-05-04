@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<properties>
+    <query key="member.pwCheck">
+     select count(*)
+        from members
+        where email = ? and password = ?
+    </query>
+
+    <query key="member.logout">
+        DELETE FROM connection_status
+        WHERE member_id = (
+        SELECT member_id
+        FROM members
+        WHERE email = ? )
+    </query>
+
+    <query key="member.kill">
+        DELETE FROM members
+        WHERE email = ?
+    </query>
+</properties>
+
+
+

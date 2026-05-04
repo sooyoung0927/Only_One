@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<properties>
+    <query key="payment.findPayment">
+        select p.payed_at as '결제일',
+        date_add(p.payed_at, interval 1 month) as '만료일',
+        p.price as '결제금액'
+        from payments p
+        left join members m
+        on m.member_id = p.member_id
+        where m.email = ?;
+    </query>
+
+    <query key="payment.payMoney">
+        INSERT INTO payments (member_id, payed_at, price)
+        SELECT m.member_id, now(), 29900
+        FROM members m
+        WHERE m.email = ?;
+    </query>
+
+    <query key="payment.checkPay">
+        select max(p.payed_at) as last_payed_at
+        from payments p
+        join members m on m.member_id = p.member_id
+        where m.email = ?;
+    </query>
+
+    <query key="payment_checkEmail">
+        select email
+        from members
+        where email = ?;
+    </query>
+
+    <query key="payment.getRefund">
+        delete from payments
+        where member_id = (select member_id
+        from members
+        where email = ? );
+    </query>
+
+</properties>
